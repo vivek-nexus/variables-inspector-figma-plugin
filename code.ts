@@ -1,84 +1,53 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
-
-// This file holds the main code for plugins. Code in this file has access to
-// the *figma document* via the figma global object.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
-
-// This shows the HTML page in "ui.html".
-figma.showUI(__html__);
-
 const fontSize = 16;
 let doesNumberTypeVariableExist = false
 let doesColorTypeVariableExist = false
 const stroke: Paint = {
   type: 'SOLID',
   color: { r: 0.7, g: 0.7, b: 0.7 }
-};
+}
 
+figma.showUI(__html__, { height: 500, width: 500 })
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-figma.ui.onmessage = (msg: { type: string, count: number }) => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{ type: 'SOLID', color: { r: 1, g: 0.5, b: 0 } }];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
-    }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
+figma.ui.onmessage = (msg: { type: string }) => {
+  if (msg.type === "get-variables") {
+    figma.variables.getLocalVariablesAsync().then((localVariables) => {
+      const variablesSanitisedArray = []
+      for (const variable of localVariables) {
+        if (variable.resolvedType === "BOOLEAN" || variable.resolvedType === "STRING") {
+          variablesSanitisedArray.push({
+            "name": variable.name,
+            "type": variable.resolvedType
+          })
+        }
+      }
+      figma.ui.postMessage(variablesSanitisedArray)
+    })
   }
-
-  // if (msg.type === "get-variables") {
-  //   figma.on("selectionchange", () => {
-  //     const selectedFrame = figma.currentPage.selection[0]
-  //     if (selectedFrame && selectedFrame.type === "FRAME") {
-  //       console.log(selectedFrame)
-  //       AppendInspectionFrames().then((variables: any) => {
-  //         figma.ui.postMessage(variables)
-  //       })
-  //     }
-  //     else
-  //       figma.notify("Please select a frame")
-  //   })
-  // }
-
   if (msg.type === "append-inspection-frame") {
     figma.variables.getLocalVariablesAsync().then((localVariables) => {
       AppendInspectionFrames(localVariables)
     })
-
   }
 
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
   if (msg.type === "cancel") {
-    figma.closePlugin();
+    figma.closePlugin()
   }
-};
+}
 
 figma.on("close", CleanUpInspectionFrames)
 
 async function AppendInspectionFrames(localVariables: Variable[]) {
-  const currentPage = figma.currentPage;
+  const currentPage = figma.currentPage
 
   // Iterate through all the layers in the current page
   for (const layer of currentPage.children) {
     if (layer.type === 'FRAME') {
       const inspectorFrame = figma.createFrame();
-      layer.appendChild(inspectorFrame);
+      layer.appendChild(inspectorFrame)
       if (layer.layoutMode !== "NONE") {
         inspectorFrame.layoutPositioning = "ABSOLUTE"
       }
-      setInspectorProps(inspectorFrame, layer)
+      setInspectorFrameProperties(inspectorFrame, layer)
 
 
       figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(async () => {
@@ -89,6 +58,7 @@ async function AppendInspectionFrames(localVariables: Variable[]) {
         inspectorFrame.appendChild(title)
         title.layoutSizingHorizontal = "FILL"
 
+        // Container for variables array
         const variablesFrame = figma.createFrame()
         inspectorFrame.appendChild(variablesFrame)
         variablesFrame.name = "VariablesFrame"
@@ -98,28 +68,34 @@ async function AppendInspectionFrames(localVariables: Variable[]) {
 
         for (const variable of localVariables) {
           if ((variable.resolvedType === "STRING")) {
+            // Container for a single variable
             const variableFrame = figma.createFrame()
             variablesFrame.appendChild(variableFrame)
             SetVariableFrameProperties(variableFrame)
 
+            // Variable name
             const name = figma.createText()
             variableFrame.appendChild(name)
             name.characters = `${variable.name}:`
 
+            // Variable value
             const value = figma.createText()
             variableFrame.appendChild(value)
             value.setBoundVariable("characters", variable)
           }
 
           if ((variable.resolvedType === "BOOLEAN")) {
+            // Container for a single variable
             const variableFrame = figma.createFrame()
             variablesFrame.appendChild(variableFrame)
             SetVariableFrameProperties(variableFrame)
 
+            // Variable name
             const name = figma.createText()
             variableFrame.appendChild(name)
             name.characters = `${variable.name}:`
 
+            // Variable truthy value show or hide
             const truthy = figma.createText()
             variableFrame.appendChild(truthy)
             truthy.characters = "true"
@@ -142,8 +118,8 @@ async function AppendInspectionFrames(localVariables: Variable[]) {
   }, 1000);
 }
 
-async function CleanUpInspectionFrames() {
-  const currentPage = figma.currentPage;
+function CleanUpInspectionFrames() {
+  const currentPage = figma.currentPage
 
   // Iterate through all the layers in the current page
   currentPage.children.forEach(layer => {
@@ -162,9 +138,9 @@ async function CleanUpInspectionFrames() {
   });
 }
 
-async function setInspectorProps(inspectorFrame: FrameNode, layer: FrameNode) {
-  inspectorFrame.name = 'InspectorFrame' // Set the name of the frame
-  inspectorFrame.resize((layer.width * 0.25), (layer.height * 0.25)); // Resize the child frame
+function setInspectorFrameProperties(inspectorFrame: FrameNode, layer: FrameNode) {
+  inspectorFrame.name = 'InspectorFrame'
+  inspectorFrame.resize((layer.width * 0.25), (layer.height * 0.25))
   inspectorFrame.layoutMode = "VERTICAL"
   inspectorFrame.horizontalPadding = 4
   inspectorFrame.verticalPadding = 4
@@ -186,7 +162,7 @@ async function setInspectorProps(inspectorFrame: FrameNode, layer: FrameNode) {
   }]
 }
 
-async function SetTextProperties(textNode: TextNode, textContent: string) {
+function SetTextProperties(textNode: TextNode, textContent: string) {
   textNode.fontName = { family: "Inter", style: "Regular" }
   textNode.fontSize = fontSize
   textNode.characters = textContent
@@ -198,8 +174,7 @@ function SetVariableFrameProperties(variableFrame: FrameNode) {
   variableFrame.layoutWrap = "WRAP"
   variableFrame.layoutSizingHorizontal = "FILL"
   variableFrame.layoutSizingVertical = "HUG"
-  variableFrame.strokes = [stroke];
-  variableFrame.strokeWeight = 1; // 1px stroke width
-  variableFrame.strokeAlign = 'OUTSIDE';
+  variableFrame.strokes = [stroke]
+  variableFrame.strokeWeight = 1
+  variableFrame.strokeAlign = 'OUTSIDE'
 }
-

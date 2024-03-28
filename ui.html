@@ -1,27 +1,86 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<p id="variables">Hellooo</p>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+    }
+
+    .styled-table {
+      border-collapse: collapse;
+      margin: 25px 0;
+      font-size: 0.9em;
+      width: 100%;
+    }
+
+    .styled-table thead tr {
+      background-color: #009879;
+      color: #ffffff;
+      text-align: left;
+    }
+
+    .styled-table th,
+    .styled-table td {
+      padding: 8px 8px;
+    }
+
+    .styled-table tbody tr {
+      border-bottom: 1px solid #dddddd;
+    }
+
+    .styled-table tbody tr:nth-of-type(even) {
+      background-color: #f3f3f3;
+    }
+
+    .styled-table tbody tr.active-row {
+      font-weight: bold;
+      color: #009879;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Variables Inspector</h2>
+  <p>Only boolean and string variables can be inspected</p>
+  <div id="table"></div>
+  <button id="button-run">Run Variables Inspector</button>
+</body>
+
 <script>
-  // document.getElementById("create").onclick = () => {
-  //   const textbox = document.getElementById("count");
-  //   const count = parseInt(textbox.value, 10);
-  //   parent.postMessage({ pluginMessage: { type: "create-rectangles", count } }, "*")
-  // }
+  parent.postMessage({ pluginMessage: { type: "get-variables" } }, "*")
 
-  document.getElementById("cancel").onclick = () => {
-    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*")
+  window.addEventListener("message", (event) => {
+    const allVariables = event.data.pluginMessage
+    console.log(allVariables)
+    PopulateVariablesTable(allVariables)
+  })
+
+  document.querySelector("#button-run").addEventListener("click", () => {
+    parent.postMessage({ pluginMessage: { type: "append-inspection-frame" } }, "*")
+  })
+
+  function PopulateVariablesTable(dataArray) {
+    let tableHTML = '<table class="styled-table"><thead><tr><th>Name</th><th>Type</th></tr></thead><tbody>';
+
+    // Loop through each item in the array
+    for (let item of dataArray) {
+      tableHTML += '<tr>';
+      tableHTML += `<td>${item.name}</td>`; // Add Name column
+      tableHTML += `<td>${item.type}</td>`; // Add Type column
+      tableHTML += '</tr>';
+    }
+
+    tableHTML += '</tbody></table>';
+    // Create a temporary element to hold the HTML
+    let div = document.createElement('div');
+    div.innerHTML = tableHTML;
+
+    // Append the table to the body of the document
+    document.querySelector("#table").appendChild(div)
   }
-
-
-  parent.postMessage({ pluginMessage: { type: "append-inspection-frame" } }, "*")
-
-  // window.addEventListener("message", (event) => {
-  //   const variables = event.data.pluginMessage
-  //   console.log(variables)
-  //   document.querySelector("#variables").textContent = variables[0].value
-  // })
-
-
 </script>
+
+</html>
