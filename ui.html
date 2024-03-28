@@ -1,0 +1,27 @@
+<h2>Rectangle Creator</h2>
+<p>Count: <input id="count" value="5"></p>
+<button id="create">Create</button>
+<button id="cancel">Cancel</button>
+<p id="variables">Hellooo</p>
+<script>
+  // document.getElementById("create").onclick = () => {
+  //   const textbox = document.getElementById("count");
+  //   const count = parseInt(textbox.value, 10);
+  //   parent.postMessage({ pluginMessage: { type: "create-rectangles", count } }, "*")
+  // }
+
+  document.getElementById("cancel").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*")
+  }
+
+
+  parent.postMessage({ pluginMessage: { type: "append-inspection-frame" } }, "*")
+
+  // window.addEventListener("message", (event) => {
+  //   const variables = event.data.pluginMessage
+  //   console.log(variables)
+  //   document.querySelector("#variables").textContent = variables[0].value
+  // })
+
+
+</script>
