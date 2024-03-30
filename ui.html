@@ -1,86 +1,101 @@
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <title>Document</title>
   <style>
     body {
       font-family: "Inter", sans-serif;
+      /* text-align: center; */
+      padding: 1rem;
+      height: max-content;
     }
 
-    .styled-table {
-      border-collapse: collapse;
-      margin: 25px 0;
-      font-size: 0.9em;
-      width: 100%;
+    p {
+      color: slategray;
+      font-size: 0.8rem;
     }
 
-    .styled-table thead tr {
-      background-color: #009879;
-      color: #ffffff;
-      text-align: left;
+    h2,
+    h4 {
+      margin-bottom: 0.5rem;
     }
 
-    .styled-table th,
-    .styled-table td {
-      padding: 8px 8px;
+    button {
+      font-family: Inter;
+      background-color: rgb(13, 153, 255);
+      color: white;
+      border: rgb(13, 153, 255);
+      border-radius: 6px;
+      padding: 8.5px 12px;
     }
 
-    .styled-table tbody tr {
-      border-bottom: 1px solid #dddddd;
+    select {
+      font-family: Inter;
+      background-color: white;
+      color: black;
+      border-radius: 6px;
+      padding: 6px 0px;
     }
 
-    .styled-table tbody tr:nth-of-type(even) {
-      background-color: #f3f3f3;
-    }
-
-    .styled-table tbody tr.active-row {
-      font-weight: bold;
-      color: #009879;
+    .text-center {
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
   <h2>Variables Inspector</h2>
-  <p>Only boolean and string variables can be inspected</p>
-  <div id="table"></div>
-  <button id="button-run">Run Variables Inspector</button>
+  <p>📌 Only boolean and string variables can be inspected</p>
+  <p>📌 Boolean variables will show a blank value when FALSE</p>
+  <div style="margin-bottom: 2rem;">
+    <h4>Select a variable collection</h4>
+    <!-- <label for="dropdown">Select collection to export</label> -->
+    <div>
+      <select id="dropdown" style="font-family: Inter;">
+      </select>
+      <button id="run">Show inspector</button>
+    </div>
+  </div>
+  <div style="color: slategray; font-size: 0.75rem;">
+    <p>Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a></p>
+    <p></p>
+  </div>
 </body>
 
 <script>
-  parent.postMessage({ pluginMessage: { type: "get-variables" } }, "*")
+  let chosenCollection = ""
+  parent.postMessage({ pluginMessage: { type: "get-collections" } }, '*')
 
   window.addEventListener("message", (event) => {
-    const allVariables = event.data.pluginMessage
-    console.log(allVariables)
-    PopulateVariablesTable(allVariables)
-  })
+    if (event.data.pluginMessage.type === "get-collections") {
+      const collections = event.data.pluginMessage.body
 
-  document.querySelector("#button-run").addEventListener("click", () => {
-    parent.postMessage({ pluginMessage: { type: "append-inspection-frame" } }, "*")
-  })
+      PopulateDropdown(collections)
 
-  function PopulateVariablesTable(dataArray) {
-    let tableHTML = '<table class="styled-table"><thead><tr><th>Name</th><th>Type</th></tr></thead><tbody>';
-
-    // Loop through each item in the array
-    for (let item of dataArray) {
-      tableHTML += '<tr>';
-      tableHTML += `<td>${item.name}</td>`; // Add Name column
-      tableHTML += `<td>${item.type}</td>`; // Add Type column
-      tableHTML += '</tr>';
+      document.querySelector("#dropdown").addEventListener("change", function (event) {
+        const selectedValue = this.value
+        chosenCollection = selectedValue
+      });
     }
+  })
 
-    tableHTML += '</tbody></table>';
-    // Create a temporary element to hold the HTML
-    let div = document.createElement('div');
-    div.innerHTML = tableHTML;
+  document.querySelector("#run").addEventListener("click", () => {
+    parent.postMessage({ pluginMessage: { type: "append-inspection-frame", collection: chosenCollection } }, "*")
+  })
 
-    // Append the table to the body of the document
-    document.querySelector("#table").appendChild(div)
+  function PopulateDropdown(collections) {
+    const dropdown = document.getElementById("dropdown");
+
+    // Clear existing options
+    dropdown.innerHTML = '';
+
+    // Add options from the array
+    collections.forEach((item) => {
+      const option = document.createElement("option");
+      option.text = item;
+      option.value = item;
+      dropdown.appendChild(option);
+    });
+
+    chosenCollection = dropdown.value
   }
 </script>
-
-</html>

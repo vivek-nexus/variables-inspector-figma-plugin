@@ -1,31 +1,29 @@
 const fontSize = 16;
-let doesNumberTypeVariableExist = false
-let doesColorTypeVariableExist = false
 const stroke: Paint = {
   type: 'SOLID',
   color: { r: 0.7, g: 0.7, b: 0.7 }
 }
 
-figma.showUI(__html__, { height: 500, width: 500 })
+figma.showUI(__html__, { height: 300, width: 300 })
 
-figma.ui.onmessage = (msg: { type: string }) => {
-  if (msg.type === "get-variables") {
-    figma.variables.getLocalVariablesAsync().then((localVariables) => {
-      const variablesSanitisedArray = []
-      for (const variable of localVariables) {
-        if (variable.resolvedType === "BOOLEAN" || variable.resolvedType === "STRING") {
-          variablesSanitisedArray.push({
-            "name": variable.name,
-            "type": variable.resolvedType
-          })
-        }
+figma.ui.onmessage = (msg: { type: string, collection: string }) => {
+  if (msg.type === "get-collections") {
+    figma.variables.getLocalVariableCollectionsAsync().then((localCollections) => {
+      const collections = []
+      for (const collection of localCollections) {
+        collections.push(collection.name)
       }
-      figma.ui.postMessage(variablesSanitisedArray)
+      figma.ui.postMessage({
+        type: "get-collections",
+        body: collections
+      })
     })
   }
+
   if (msg.type === "append-inspection-frame") {
-    figma.variables.getLocalVariablesAsync().then((localVariables) => {
-      AppendInspectionFrames(localVariables)
+    CleanUpInspectionFramesWrapper()
+    GetCollectionId(msg.collection).then((collectionId) => {
+      AppendInspectionFramesWrapper(collectionId)
     })
   }
 
@@ -34,106 +32,117 @@ figma.ui.onmessage = (msg: { type: string }) => {
   }
 }
 
-figma.on("close", CleanUpInspectionFrames)
+figma.on("close", CleanUpInspectionFramesWrapper)
 
-async function AppendInspectionFrames(localVariables: Variable[]) {
+function AppendInspectionFramesWrapper(collectionId: string) {
   const currentPage = figma.currentPage
 
   // Iterate through all the layers in the current page
   for (const layer of currentPage.children) {
     if (layer.type === 'FRAME') {
-      const inspectorFrame = figma.createFrame();
-      layer.appendChild(inspectorFrame)
-      if (layer.layoutMode !== "NONE") {
-        inspectorFrame.layoutPositioning = "ABSOLUTE"
-      }
-      setInspectorFrameProperties(inspectorFrame, layer)
-
-
-      figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(async () => {
-        const title = figma.createText()
-        title.fontName = { family: "Inter", style: "Regular" }
-        title.fontSize = fontSize
-        title.characters = "Variables Inspector"
-        inspectorFrame.appendChild(title)
-        title.layoutSizingHorizontal = "FILL"
-
-        // Container for variables array
-        const variablesFrame = figma.createFrame()
-        inspectorFrame.appendChild(variablesFrame)
-        variablesFrame.name = "VariablesFrame"
-        variablesFrame.layoutMode = "VERTICAL"
-        variablesFrame.layoutSizingHorizontal = "FILL"
-        variablesFrame.layoutSizingVertical = "HUG"
-
-        for (const variable of localVariables) {
-          if ((variable.resolvedType === "STRING")) {
-            // Container for a single variable
-            const variableFrame = figma.createFrame()
-            variablesFrame.appendChild(variableFrame)
-            SetVariableFrameProperties(variableFrame)
-
-            // Variable name
-            const name = figma.createText()
-            variableFrame.appendChild(name)
-            name.characters = `${variable.name}:`
-
-            // Variable value
-            const value = figma.createText()
-            variableFrame.appendChild(value)
-            value.setBoundVariable("characters", variable)
-          }
-
-          if ((variable.resolvedType === "BOOLEAN")) {
-            // Container for a single variable
-            const variableFrame = figma.createFrame()
-            variablesFrame.appendChild(variableFrame)
-            SetVariableFrameProperties(variableFrame)
-
-            // Variable name
-            const name = figma.createText()
-            variableFrame.appendChild(name)
-            name.characters = `${variable.name}:`
-
-            // Variable truthy value show or hide
-            const truthy = figma.createText()
-            variableFrame.appendChild(truthy)
-            truthy.characters = "true"
-            truthy.setBoundVariable("visible", variable)
-          }
-
-          if (variable.resolvedType === "FLOAT")
-            doesNumberTypeVariableExist = true
-          if (variable.resolvedType === "COLOR")
-            doesColorTypeVariableExist = true
+      AppendInspectionFrames(layer, collectionId)
+    }
+    if (layer.type === "SECTION") {
+      for (const sectionChild of layer.children) {
+        if (sectionChild.type === 'FRAME') {
+          AppendInspectionFrames(sectionChild, collectionId)
         }
-      })
+      }
     }
   }
-  setTimeout(() => {
-    if (doesNumberTypeVariableExist === true)
-      figma.notify("Number type variables cannot be inspected due to Figma limitations")
-    if (doesColorTypeVariableExist === true)
-      figma.notify("Color type variables are currently not supported")
-  }, 1000);
 }
 
-function CleanUpInspectionFrames() {
+function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
+  const inspectorFrame = figma.createFrame();
+  layer.appendChild(inspectorFrame)
+  if (layer.layoutMode !== "NONE") {
+    inspectorFrame.layoutPositioning = "ABSOLUTE"
+  }
+  setInspectorFrameProperties(inspectorFrame, layer)
+
+
+  figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(async () => {
+    const title = figma.createText()
+    title.fontName = { family: "Inter", style: "Regular" }
+    title.fontSize = fontSize
+    title.characters = "Inspector"
+    inspectorFrame.appendChild(title)
+    title.layoutSizingHorizontal = "FILL"
+
+    // Container for variables array
+    const variablesFrame = figma.createFrame()
+    inspectorFrame.appendChild(variablesFrame)
+    variablesFrame.name = "VariablesFrame"
+    variablesFrame.layoutMode = "VERTICAL"
+    variablesFrame.layoutSizingHorizontal = "FILL"
+    variablesFrame.layoutSizingVertical = "HUG"
+
+    figma.variables.getLocalVariablesAsync().then((localVariables) => {
+      for (const variable of localVariables) {
+        if ((variable.resolvedType === "STRING") && (variable.variableCollectionId === collectionId)) {
+          // Container for a single variable
+          const variableFrame = figma.createFrame()
+          variablesFrame.appendChild(variableFrame)
+          SetVariableFrameProperties(variableFrame)
+
+          // Variable name
+          const name = figma.createText()
+          variableFrame.appendChild(name)
+          name.characters = `${variable.name}:`
+
+          // Variable value
+          const value = figma.createText()
+          variableFrame.appendChild(value)
+          value.setBoundVariable("characters", variable)
+        }
+
+        if ((variable.resolvedType === "BOOLEAN") && (variable.variableCollectionId === collectionId)) {
+          // Container for a single variable
+          const variableFrame = figma.createFrame()
+          variablesFrame.appendChild(variableFrame)
+          SetVariableFrameProperties(variableFrame)
+
+          // Variable name
+          const name = figma.createText()
+          variableFrame.appendChild(name)
+          name.characters = `${variable.name}:`
+
+          // Variable truthy value show or hide
+          const truthy = figma.createText()
+          variableFrame.appendChild(truthy)
+          truthy.characters = "true"
+          truthy.setBoundVariable("visible", variable)
+        }
+      }
+    })
+  })
+}
+
+function CleanUpInspectionFramesWrapper() {
   const currentPage = figma.currentPage
 
   // Iterate through all the layers in the current page
-  currentPage.children.forEach(layer => {
-    // Check if the layer is a frame
+  for (const layer of currentPage.children) {
     if (layer.type === 'FRAME') {
-
-      // Iterate through all the children of the parent frame
-      layer.children.forEach(child => {
-        // Check if the child is the frame previously appended by name
-        if (child.type === 'FRAME' && child.name === 'InspectorFrame') {
-          // Remove the child frame
-          child.remove()
+      CleanUpInspectionFrames(layer)
+    }
+    if (layer.type === "SECTION") {
+      for (const sectionChild of layer.children) {
+        if (sectionChild.type === 'FRAME') {
+          CleanUpInspectionFrames(sectionChild)
         }
-      });
+      }
+    }
+  }
+}
+
+function CleanUpInspectionFrames(layer: FrameNode) {
+  // Iterate through all the children of the parent frame
+  layer.children.forEach(child => {
+    // Check if the child is the frame previously appended by name
+    if (child.type === 'FRAME' && child.name === 'InspectorFrame') {
+      // Remove the child frame
+      child.remove()
     }
   });
 }
@@ -178,3 +187,14 @@ function SetVariableFrameProperties(variableFrame: FrameNode) {
   variableFrame.strokeWeight = 1
   variableFrame.strokeAlign = 'OUTSIDE'
 }
+
+async function GetCollectionId(collectionName: string): Promise<string> {
+  const localCollections = await figma.variables.getLocalVariableCollectionsAsync();
+  for (const collection of localCollections) {
+    if (collection.name === collectionName) {
+      return collection.id; // Return the collection ID directly when found
+    }
+  }
+  return "";
+}
+
