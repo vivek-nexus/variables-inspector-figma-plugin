@@ -60,7 +60,6 @@ function AppendInspectionFrames(layer, collectionId) {
     if (layer.layoutMode !== "NONE") {
         inspectorFrame.layoutPositioning = "ABSOLUTE";
     }
-    layer.numberOfFixedChildren = layer.numberOfFixedChildren + 1;
     setInspectorFrameProperties(inspectorFrame, layer);
     Promise.all([
         figma.loadFontAsync({ family: "Inter", style: "Semi Bold" }),

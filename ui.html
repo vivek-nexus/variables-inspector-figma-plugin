@@ -86,7 +86,7 @@
 
   document.querySelector("#run").addEventListener("click", () => {
     const message = document.querySelector("#message")
-    message.innerHTML = `Don't edit/remove inspector frames, they are auto removed when you close the plugin`
+    message.innerHTML = `Don't edit/remove inspector frames, they will be auto removed when you close the plugin`
     message.setAttribute("style", "color: red; display:block;")
     setTimeout(() => {
       message.innerHTML = `Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a>`

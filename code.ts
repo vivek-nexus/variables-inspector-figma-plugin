@@ -60,7 +60,6 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
   if (layer.layoutMode !== "NONE") {
     inspectorFrame.layoutPositioning = "ABSOLUTE"
   }
-  layer.numberOfFixedChildren = layer.numberOfFixedChildren + 1
   setInspectorFrameProperties(inspectorFrame, layer)
 
 
