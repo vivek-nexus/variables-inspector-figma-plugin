@@ -5,7 +5,7 @@ const stroke: Paint = {
 
 type FontWeights = "Regular" | "Semi Bold"
 
-figma.showUI(__html__, { height: 320, width: 450 })
+figma.showUI(__html__, { height: 360, width: 480 })
 
 figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   if (msg.type === "get-collections") {
@@ -60,6 +60,7 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
   if (layer.layoutMode !== "NONE") {
     inspectorFrame.layoutPositioning = "ABSOLUTE"
   }
+  layer.numberOfFixedChildren = layer.numberOfFixedChildren + 1
   setInspectorFrameProperties(inspectorFrame, layer)
 
 
@@ -80,7 +81,7 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
     inspectorFrame.appendChild(subTitle)
     subTitle.fontName = { family: "Inter", style: "Regular" }
     subTitle.fontSize = 12
-    subTitle.characters = `Scroll to see clipped values`
+    subTitle.characters = `Scroll to see any clipped values`
     subTitle.layoutSizingHorizontal = "HUG"
 
     // Container for variables array

@@ -12,7 +12,7 @@ const stroke = {
     type: 'SOLID',
     color: { r: 0.7, g: 0.7, b: 0.7 }
 };
-figma.showUI(__html__, { height: 320, width: 450 });
+figma.showUI(__html__, { height: 360, width: 480 });
 figma.ui.onmessage = (msg) => {
     if (msg.type === "get-collections") {
         figma.variables.getLocalVariableCollectionsAsync().then((localCollections) => {
@@ -60,6 +60,7 @@ function AppendInspectionFrames(layer, collectionId) {
     if (layer.layoutMode !== "NONE") {
         inspectorFrame.layoutPositioning = "ABSOLUTE";
     }
+    layer.numberOfFixedChildren = layer.numberOfFixedChildren + 1;
     setInspectorFrameProperties(inspectorFrame, layer);
     Promise.all([
         figma.loadFontAsync({ family: "Inter", style: "Semi Bold" }),
@@ -77,7 +78,7 @@ function AppendInspectionFrames(layer, collectionId) {
         inspectorFrame.appendChild(subTitle);
         subTitle.fontName = { family: "Inter", style: "Regular" };
         subTitle.fontSize = 12;
-        subTitle.characters = `Scroll to see clipped values`;
+        subTitle.characters = `Scroll to see any clipped values`;
         subTitle.layoutSizingHorizontal = "HUG";
         // Container for variables array
         const variablesFrame = figma.createFrame();

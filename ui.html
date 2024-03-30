@@ -85,16 +85,14 @@
   })
 
   document.querySelector("#run").addEventListener("click", () => {
-    parent.postMessage({ pluginMessage: { type: "append-inspection-frame", collection: chosenCollection } }, "*")
     const message = document.querySelector("#message")
-    setTimeout(() => {
-      message.innerHTML = `Don't edit/remove inspector frames, they are auto removed when you close the plugin`
-      message.setAttribute("style", "color: red; display:block;")
-    }, 3000);
+    message.innerHTML = `Don't edit/remove inspector frames, they are auto removed when you close the plugin`
+    message.setAttribute("style", "color: red; display:block;")
     setTimeout(() => {
       message.innerHTML = `Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a>`
       message.setAttribute("style", "color: slategray; margin-top: 2rem;")
     }, 10000);
+    parent.postMessage({ pluginMessage: { type: "append-inspection-frame", collection: chosenCollection } }, "*")
   })
 
   function PopulateDropdown(collections) {
