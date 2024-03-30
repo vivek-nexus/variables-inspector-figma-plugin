@@ -16,7 +16,8 @@
 
     h2,
     h4 {
-      margin-bottom: 0.5rem;
+      margin-top: 0rem;
+      margin-bottom: 1rem;
     }
 
     button {
@@ -44,21 +45,26 @@
 
 <body>
   <h2>Variables Inspector</h2>
-  <p>📌 Only boolean and string variables can be inspected</p>
-  <p>📌 Boolean variables will show a blank value when FALSE</p>
+  <h4>🤩 Debug your variables in designs and prototypes</h4>
   <div style="margin-bottom: 2rem;">
-    <h4>Select a variable collection</h4>
-    <!-- <label for="dropdown">Select collection to export</label> -->
-    <div>
+    <p>📌 Only boolean and string variables are <a href="https://forum.figma.com/t/65085" target="_blank">supported</a>
+    </p>
+    <p>📌 Boolean variables will show a blank value when FALSE</p>
+  </div>
+  <div>
+    <h4>Select a variable collection to inspect</h4>
+    <div style="display: flex; gap: 0.25rem;">
       <select id="dropdown" style="font-family: Inter;">
       </select>
       <button id="run">Show inspector</button>
     </div>
   </div>
-  <div style="color: slategray; font-size: 0.75rem;">
+  <p id="message" style="margin-top: 2rem;">Another project by <a href="https://www.figma.com/@vivek_nexus"
+      target="_blank">Vivek</a></p>
+  <!-- <div style="color: slategray; font-size: 0.75rem;">
     <p>Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a></p>
     <p></p>
-  </div>
+  </div> -->
 </body>
 
 <script>
@@ -80,6 +86,15 @@
 
   document.querySelector("#run").addEventListener("click", () => {
     parent.postMessage({ pluginMessage: { type: "append-inspection-frame", collection: chosenCollection } }, "*")
+    const message = document.querySelector("#message")
+    setTimeout(() => {
+      message.innerHTML = `Don't edit/remove inspector frames, they are auto removed when you close the plugin`
+      message.setAttribute("style", "color: red; display:block;")
+    }, 3000);
+    setTimeout(() => {
+      message.innerHTML = `Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a>`
+      message.setAttribute("style", "color: slategray; margin-top: 2rem;")
+    }, 10000);
   })
 
   function PopulateDropdown(collections) {

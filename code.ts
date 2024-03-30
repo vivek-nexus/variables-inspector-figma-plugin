@@ -1,10 +1,11 @@
-const fontSize = 16;
 const stroke: Paint = {
   type: 'SOLID',
   color: { r: 0.7, g: 0.7, b: 0.7 }
 }
 
-figma.showUI(__html__, { height: 300, width: 300 })
+type FontWeights = "Regular" | "Semi Bold"
+
+figma.showUI(__html__, { height: 320, width: 450 })
 
 figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   if (msg.type === "get-collections") {
@@ -23,6 +24,7 @@ figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   if (msg.type === "append-inspection-frame") {
     CleanUpInspectionFramesWrapper()
     GetCollectionId(msg.collection).then((collectionId) => {
+      figma.notify("Adding inspector to all frames... This can take a while depending on the number of frames/variables", { timeout: 5000 })
       AppendInspectionFramesWrapper(collectionId)
     })
   }
@@ -61,21 +63,34 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
   setInspectorFrameProperties(inspectorFrame, layer)
 
 
-  figma.loadFontAsync({ family: "Inter", style: "Regular" }).then(async () => {
+  Promise.all([
+    figma.loadFontAsync({ family: "Inter", style: "Semi Bold" }),
+    figma.loadFontAsync({ family: "Inter", style: "Regular" })
+  ]).then(() => {
+    // title
     const title = figma.createText()
-    title.fontName = { family: "Inter", style: "Regular" }
-    title.fontSize = fontSize
-    title.characters = "Inspector"
     inspectorFrame.appendChild(title)
-    title.layoutSizingHorizontal = "FILL"
+    title.fontName = { family: "Inter", style: "Semi Bold" }
+    title.fontSize = 16
+    title.characters = `Inspector`
+    title.layoutSizingHorizontal = "HUG"
+
+    //subtitle
+    const subTitle = figma.createText()
+    inspectorFrame.appendChild(subTitle)
+    subTitle.fontName = { family: "Inter", style: "Regular" }
+    subTitle.fontSize = 12
+    subTitle.characters = `Scroll to see clipped values`
+    subTitle.layoutSizingHorizontal = "HUG"
 
     // Container for variables array
     const variablesFrame = figma.createFrame()
     inspectorFrame.appendChild(variablesFrame)
     variablesFrame.name = "VariablesFrame"
     variablesFrame.layoutMode = "VERTICAL"
-    variablesFrame.layoutSizingHorizontal = "FILL"
+    variablesFrame.layoutSizingHorizontal = "HUG"
     variablesFrame.layoutSizingVertical = "HUG"
+    variablesFrame.paddingTop = 12
 
     figma.variables.getLocalVariablesAsync().then((localVariables) => {
       for (const variable of localVariables) {
@@ -88,11 +103,12 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
           // Variable name
           const name = figma.createText()
           variableFrame.appendChild(name)
-          name.characters = `${variable.name}:`
+          SetTextProperties(name, "Semi Bold", `${variable.name}: `)
 
           // Variable value
           const value = figma.createText()
           variableFrame.appendChild(value)
+          SetTextProperties(value, "Regular")
           value.setBoundVariable("characters", variable)
         }
 
@@ -105,12 +121,12 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
           // Variable name
           const name = figma.createText()
           variableFrame.appendChild(name)
-          name.characters = `${variable.name}:`
+          SetTextProperties(name, "Semi Bold", `${variable.name}: `)
 
           // Variable truthy value show or hide
           const truthy = figma.createText()
           variableFrame.appendChild(truthy)
-          truthy.characters = "true"
+          SetTextProperties(truthy, "Regular", "true")
           truthy.setBoundVariable("visible", variable)
         }
       }
@@ -153,7 +169,7 @@ function setInspectorFrameProperties(inspectorFrame: FrameNode, layer: FrameNode
   inspectorFrame.layoutMode = "VERTICAL"
   inspectorFrame.horizontalPadding = 4
   inspectorFrame.verticalPadding = 4
-  inspectorFrame.itemSpacing = 4
+  inspectorFrame.itemSpacing = 0
   inspectorFrame.overflowDirection = "BOTH";
   inspectorFrame.layoutSizingVertical = "HUG"
   inspectorFrame.layoutSizingHorizontal = "HUG"
@@ -171,17 +187,18 @@ function setInspectorFrameProperties(inspectorFrame: FrameNode, layer: FrameNode
   }]
 }
 
-function SetTextProperties(textNode: TextNode, textContent: string) {
-  textNode.fontName = { family: "Inter", style: "Regular" }
-  textNode.fontSize = fontSize
-  textNode.characters = textContent
+function SetTextProperties(textNode: TextNode, fontWeight: FontWeights, textContent?: string) {
+  textNode.fontName = { family: "Inter", style: fontWeight }
+  textNode.fontSize = 12
+  if (textContent)
+    textNode.characters = textContent
 }
 
 function SetVariableFrameProperties(variableFrame: FrameNode) {
   variableFrame.name = "VariableFrame"
   variableFrame.layoutMode = "HORIZONTAL"
   variableFrame.layoutWrap = "WRAP"
-  variableFrame.layoutSizingHorizontal = "FILL"
+  variableFrame.layoutSizingHorizontal = "HUG"
   variableFrame.layoutSizingVertical = "HUG"
   variableFrame.strokes = [stroke]
   variableFrame.strokeWeight = 1
