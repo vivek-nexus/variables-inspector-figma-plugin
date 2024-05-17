@@ -7,6 +7,9 @@ type FontWeights = "Regular" | "Semi Bold"
 
 figma.showUI(__html__, { height: 360, width: 480 })
 
+// Global variable used to refer the correct and current page, even on page change
+const currentPage = figma.currentPage
+
 figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   if (msg.type === "get-collections") {
     figma.variables.getLocalVariableCollectionsAsync().then((localCollections) => {
@@ -22,10 +25,12 @@ figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   }
 
   if (msg.type === "append-inspection-frame") {
-    CleanUpInspectionFramesWrapper()
-    GetCollectionId(msg.collection).then((collectionId) => {
-      figma.notify("Adding inspector to all frames... This can take a while depending on the number of frames/variables", { timeout: 5000 })
-      AppendInspectionFramesWrapper(collectionId)
+    currentPage.loadAsync().then(() => {
+      CleanUpInspectionFramesWrapper()
+      GetCollectionId(msg.collection).then((collectionId) => {
+        figma.notify("Adding Inspector to all frames... This can take a while depending on the number of frames/variables", { timeout: 5000 })
+        AppendInspectionFramesWrapper(collectionId)
+      })
     })
   }
 
@@ -34,11 +39,12 @@ figma.ui.onmessage = (msg: { type: string, collection: string }) => {
   }
 }
 
+figma.on("currentpagechange", () => figma.closePlugin())
+
 figma.on("close", CleanUpInspectionFramesWrapper)
 
-function AppendInspectionFramesWrapper(collectionId: string) {
-  const currentPage = figma.currentPage
 
+function AppendInspectionFramesWrapper(collectionId: string) {
   // Iterate through all the layers in the current page
   for (const layer of currentPage.children) {
     if (layer.type === 'FRAME') {
@@ -135,8 +141,6 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
 }
 
 function CleanUpInspectionFramesWrapper() {
-  const currentPage = figma.currentPage
-
   // Iterate through all the layers in the current page
   for (const layer of currentPage.children) {
     if (layer.type === 'FRAME') {
@@ -160,7 +164,7 @@ function CleanUpInspectionFrames(layer: FrameNode) {
       // Remove the child frame
       child.remove()
     }
-  });
+  })
 }
 
 function setInspectorFrameProperties(inspectorFrame: FrameNode, layer: FrameNode) {
@@ -206,12 +210,13 @@ function SetVariableFrameProperties(variableFrame: FrameNode) {
 }
 
 async function GetCollectionId(collectionName: string): Promise<string> {
-  const localCollections = await figma.variables.getLocalVariableCollectionsAsync();
+  const localCollections = await figma.variables.getLocalVariableCollectionsAsync()
   for (const collection of localCollections) {
     if (collection.name === collectionName) {
-      return collection.id; // Return the collection ID directly when found
+      // Return the collection ID directly when found
+      return collection.id
     }
   }
-  return "";
+  return ""
 }
 

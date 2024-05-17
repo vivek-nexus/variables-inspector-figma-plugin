@@ -22,9 +22,9 @@
 
     button {
       font-family: Inter;
-      background-color: rgb(13, 153, 255);
+      background-color: #0d99ff;
       color: white;
-      border: rgb(13, 153, 255);
+      border: #0d99ff;
       border-radius: 6px;
       padding: 8.5px 12px;
     }
@@ -39,6 +39,11 @@
 
     .text-center {
       text-align: center;
+    }
+
+    ul {
+      padding-inline-start: 16px;
+      margin: 2rem 0rem;
     }
   </style>
 </head>
@@ -59,12 +64,10 @@
       <button id="run">Show inspector</button>
     </div>
   </div>
-  <p id="message" style="margin-top: 2rem;">Another project by <a href="https://www.figma.com/@vivek_nexus"
-      target="_blank">Vivek</a></p>
-  <!-- <div style="color: slategray; font-size: 0.75rem;">
+  <p id="message"></p>
+  <div style="color: slategray; font-size: 0.75rem;">
     <p>Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a></p>
-    <p></p>
-  </div> -->
+  </div>
 </body>
 
 <script>
@@ -86,12 +89,13 @@
 
   document.querySelector("#run").addEventListener("click", () => {
     const message = document.querySelector("#message")
-    message.innerHTML = `Don't edit/remove inspector frames, they will be auto removed when you close the plugin`
-    message.setAttribute("style", "color: red; display:block;")
-    setTimeout(() => {
-      message.innerHTML = `Another project by <a href="https://www.figma.com/@vivek_nexus" target="_blank">Vivek</a>`
-      message.setAttribute("style", "color: slategray; margin-top: 2rem;")
-    }, 10000);
+    message.innerHTML = `
+   <ul>
+      <li>Plugin will auto clean up the Inspector when closed</li>
+      <li>You may fix the Inspector manually for frames that scroll</li>
+      <li>You may move the Inspector to other corners manually, but they might not auto clean up</li>
+    </ul>`
+    message.setAttribute("style", "color: slategray; display:block;")
     parent.postMessage({ pluginMessage: { type: "append-inspection-frame", collection: chosenCollection } }, "*")
   })
 

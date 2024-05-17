@@ -13,6 +13,8 @@ const stroke = {
     color: { r: 0.7, g: 0.7, b: 0.7 }
 };
 figma.showUI(__html__, { height: 360, width: 480 });
+// Global variable used to refer the correct and current page, even on page change
+const currentPage = figma.currentPage;
 figma.ui.onmessage = (msg) => {
     if (msg.type === "get-collections") {
         figma.variables.getLocalVariableCollectionsAsync().then((localCollections) => {
@@ -27,19 +29,21 @@ figma.ui.onmessage = (msg) => {
         });
     }
     if (msg.type === "append-inspection-frame") {
-        CleanUpInspectionFramesWrapper();
-        GetCollectionId(msg.collection).then((collectionId) => {
-            figma.notify("Adding inspector to all frames... This can take a while depending on the number of frames/variables", { timeout: 5000 });
-            AppendInspectionFramesWrapper(collectionId);
+        currentPage.loadAsync().then(() => {
+            CleanUpInspectionFramesWrapper();
+            GetCollectionId(msg.collection).then((collectionId) => {
+                figma.notify("Adding Inspector to all frames... This can take a while depending on the number of frames/variables", { timeout: 5000 });
+                AppendInspectionFramesWrapper(collectionId);
+            });
         });
     }
     if (msg.type === "cancel") {
         figma.closePlugin();
     }
 };
+figma.on("currentpagechange", () => figma.closePlugin());
 figma.on("close", CleanUpInspectionFramesWrapper);
 function AppendInspectionFramesWrapper(collectionId) {
-    const currentPage = figma.currentPage;
     // Iterate through all the layers in the current page
     for (const layer of currentPage.children) {
         if (layer.type === 'FRAME') {
@@ -124,7 +128,6 @@ function AppendInspectionFrames(layer, collectionId) {
     });
 }
 function CleanUpInspectionFramesWrapper() {
-    const currentPage = figma.currentPage;
     // Iterate through all the layers in the current page
     for (const layer of currentPage.children) {
         if (layer.type === 'FRAME') {
@@ -193,7 +196,8 @@ function GetCollectionId(collectionName) {
         const localCollections = yield figma.variables.getLocalVariableCollectionsAsync();
         for (const collection of localCollections) {
             if (collection.name === collectionName) {
-                return collection.id; // Return the collection ID directly when found
+                // Return the collection ID directly when found
+                return collection.id;
             }
         }
         return "";
