@@ -1,40 +1,24 @@
-Below are the steps to get your plugin running. You can also find instructions at:
+# Variables Inspector
+**Debug your variables in designs and prototypes. The missing DevTools for Figma variables.**
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+https://www.figma.com/community/plugin/1355055910166329140
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+![image](https://github.com/vivek-nexus/variables-inspector-figma-plugin/assets/26523871/6f7cc93e-896b-44b0-87ce-8995c495a2fe)
 
-  https://nodejs.org/en/download/
 
-Next, install TypeScript using the command:
+---
+## What is this plugin for?
+Using complex variables and logic in Figma, but can't find a way to debug when things don't wok as expected?
 
-  npm install -g typescript
+Variables Inspector will show current values of variables as an overlay on every frame. The inspector works in both design and prototype modes. You can quickly see and isolate what is going wrong and make changes to fix them.
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+---
 
-  npm install --save-dev @figma/plugin-typings
-
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
-
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
-
-For more information, visit https://www.typescriptlang.org/
-
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
-
-We recommend writing TypeScript code using Visual Studio code:
-
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
-
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+## Instructions
+1. Open the desired page and run the plugin (file should contain at least one variable, no pranks please!).
+2. Choose the variable collection you would like to inspect and click Show Inspector.
+3. Plugin will add Inspector to all the frames in the current page, listing the variables and their current values.
+4. Added Inspector is visible in prototypes as well and will update in real-time, when variable values change.
+5. Go debug that pesky variable that is driving you nuts.
+6. Close the plugin when you no longer need the Inspector.
