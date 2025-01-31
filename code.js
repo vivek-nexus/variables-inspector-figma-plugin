@@ -44,18 +44,24 @@ figma.ui.onmessage = (msg) => {
 figma.on("currentpagechange", () => figma.closePlugin());
 figma.on("close", CleanUpInspectionFramesWrapper);
 function AppendInspectionFramesWrapper(collectionId) {
-    // Iterate through all the layers in the current page
-    for (const layer of currentPage.children) {
+    // Helper function to recursively search through layers
+    function processLayer(layer, collectionId) {
         if (layer.type === 'FRAME') {
+            // Append frames directly
             AppendInspectionFrames(layer, collectionId);
         }
-        if (layer.type === "SECTION") {
+        // If the layer is a section, we need to check its children and go deeper if necessary
+        if (layer.type === 'SECTION') {
             for (const sectionChild of layer.children) {
-                if (sectionChild.type === 'FRAME') {
-                    AppendInspectionFrames(sectionChild, collectionId);
-                }
+                // Recursively process each child
+                processLayer(sectionChild, collectionId);
             }
         }
+    }
+    // Iterate through all the layers in the current page
+    for (const layer of currentPage.children) {
+        // Process each layer
+        processLayer(layer, collectionId);
     }
 }
 function AppendInspectionFrames(layer, collectionId) {
@@ -128,18 +134,24 @@ function AppendInspectionFrames(layer, collectionId) {
     });
 }
 function CleanUpInspectionFramesWrapper() {
-    // Iterate through all the layers in the current page
-    for (const layer of currentPage.children) {
+    // Helper function to recursively clean up frames
+    function processLayer(layer) {
         if (layer.type === 'FRAME') {
+            // Clean up frames directly
             CleanUpInspectionFrames(layer);
         }
-        if (layer.type === "SECTION") {
+        // If the layer is a section, recursively process its children
+        if (layer.type === 'SECTION') {
             for (const sectionChild of layer.children) {
-                if (sectionChild.type === 'FRAME') {
-                    CleanUpInspectionFrames(sectionChild);
-                }
+                // Recursively clean up each child
+                processLayer(sectionChild);
             }
         }
+    }
+    // Iterate through all the layers in the current page
+    for (const layer of currentPage.children) {
+        // Process each layer
+        processLayer(layer);
     }
 }
 function CleanUpInspectionFrames(layer) {

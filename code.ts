@@ -45,23 +45,32 @@ figma.on("close", CleanUpInspectionFramesWrapper)
 
 
 function AppendInspectionFramesWrapper(collectionId: string) {
-  // Iterate through all the layers in the current page
-  for (const layer of currentPage.children) {
+  // Helper function to recursively search through layers
+  function processLayer(layer: SceneNode, collectionId: string) {
     if (layer.type === 'FRAME') {
+      // Append frames directly
       AppendInspectionFrames(layer, collectionId)
     }
-    if (layer.type === "SECTION") {
+
+    // If the layer is a section, we need to check its children and go deeper if necessary
+    if (layer.type === 'SECTION') {
       for (const sectionChild of layer.children) {
-        if (sectionChild.type === 'FRAME') {
-          AppendInspectionFrames(sectionChild, collectionId)
-        }
+        // Recursively process each child
+        processLayer(sectionChild, collectionId)
       }
     }
   }
+
+  // Iterate through all the layers in the current page
+  for (const layer of currentPage.children) {
+    // Process each layer
+    processLayer(layer, collectionId)
+  }
 }
 
+
 function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
-  const inspectorFrame = figma.createFrame();
+  const inspectorFrame = figma.createFrame()
   layer.appendChild(inspectorFrame)
   if (layer.layoutMode !== "NONE") {
     inspectorFrame.layoutPositioning = "ABSOLUTE"
@@ -141,20 +150,29 @@ function AppendInspectionFrames(layer: FrameNode, collectionId: string) {
 }
 
 function CleanUpInspectionFramesWrapper() {
-  // Iterate through all the layers in the current page
-  for (const layer of currentPage.children) {
+  // Helper function to recursively clean up frames
+  function processLayer(layer: SceneNode) {
     if (layer.type === 'FRAME') {
+      // Clean up frames directly
       CleanUpInspectionFrames(layer)
     }
-    if (layer.type === "SECTION") {
+
+    // If the layer is a section, recursively process its children
+    if (layer.type === 'SECTION') {
       for (const sectionChild of layer.children) {
-        if (sectionChild.type === 'FRAME') {
-          CleanUpInspectionFrames(sectionChild)
-        }
+        // Recursively clean up each child
+        processLayer(sectionChild)
       }
     }
   }
+
+  // Iterate through all the layers in the current page
+  for (const layer of currentPage.children) {
+    // Process each layer
+    processLayer(layer)
+  }
 }
+
 
 function CleanUpInspectionFrames(layer: FrameNode) {
   // Iterate through all the children of the parent frame
@@ -174,7 +192,7 @@ function setInspectorFrameProperties(inspectorFrame: FrameNode, layer: FrameNode
   inspectorFrame.horizontalPadding = 4
   inspectorFrame.verticalPadding = 4
   inspectorFrame.itemSpacing = 0
-  inspectorFrame.overflowDirection = "BOTH";
+  inspectorFrame.overflowDirection = "BOTH"
   inspectorFrame.layoutSizingVertical = "HUG"
   inspectorFrame.layoutSizingHorizontal = "HUG"
   inspectorFrame.maxWidth = layer.width * 0.25
